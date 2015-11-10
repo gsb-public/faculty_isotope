@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function faculty_isotope_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools') {
+    return "plugins/$plugin_type";
+  }
+}
+
+function faculty_isotope_theme($existing, $type , $theme, $path) {
+
+  return array(
+    'faculty_isotope_wrapper' => array(
+      'template' => 'templates/faculty-isotope-wrapper',
+      'file' => 'theme.inc',
+    ),
+    'faculty_isotope_item' => array(
+      'template' => 'templates/faculty-isotope-item',
+      'file' => 'theme.inc',
+    ),
+  );
+}
+
+function faculty_isotope_menu() {
+  $items = array();
+  $items['faculty-search/%'] = array(
+    'title' => 'Search',
+    'page callback' => 'faculty_isotope_search',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function faculty_isotope_search($search = '') {
+  $terms = explode(' ', $search);
+
+  $select = db_select('field_data_field_search_field', 'sf');
+  // Select these specific fields for the output.
+  $select->addField('sf', 'entity_id');
+
+  $select->condition('sf.bundle', 'faculty');
+
+  foreach ($terms as $key => $term) {
+    $select->condition('sf.field_search_field_value', '% ' . $term . ' %', 'LIKE');
+  }
+
+  $entries = $select->execute()->fetchAll(PDO::FETCH_ASSOC);
+  $output = array();
+  foreach ($entries as $entry) {
+    $output[] = $entry['entity_id'];
+  }
+  drupal_json_output($output);
+  drupal_exit();
+}
