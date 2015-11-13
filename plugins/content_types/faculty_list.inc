@@ -42,8 +42,13 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
     $academic_area_class = drupal_html_class($result->academic_area);
     $center_class = drupal_html_class($result->center);
 
-    $academic_areas[$academic_area_class] = $result->academic_area;
-    $centers[$center_class] = $result->center;
+    if (!empty($academic_area_class)) {
+      $academic_areas[$academic_area_class] = $result->academic_area;
+    }
+
+    if (!empty($center_class)) {
+      $centers[$center_class] = $result->center;
+    }
 
     $classes[] = $academic_area_class;
     $classes[] = $center_class;
@@ -62,9 +67,10 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
     $items .= theme('faculty_isotope_item', $variables);
   }
 
-  $output = theme('faculty_isotope_wrapper', array('items' => $items));
+  $output = theme('faculty_isotope_wrapper', array('items' => $items, 'academic_areas' => $academic_areas, 'centers' => $centers));
 
   drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.2/isotope.pkgd.js', 'external');
+  drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/jquery.lazyload/1.9.1/jquery.lazyload.min.js', 'external');
   drupal_add_js(drupal_get_path('module', 'faculty_isotope') . '/js/faculty-isotope.js');
 
   return (object) array(
