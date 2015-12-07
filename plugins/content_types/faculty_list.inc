@@ -83,42 +83,50 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
   $centers = array();
   $academic_areas = array();
 
+  $faculty = array();
+
   while ($result = $query->fetchObject()) {
-    $rank_area = $result->rank;
-    if (!empty($result->academic_area)) {
-      $rank_area .= ', ' . $result->academic_area;
+    $nid = $result->nid;
+
+    $faculty[$nid]['title'] = $result->title;
+    $faculty[$nid]['rank'] = $result->rank;
+    $faculty[$nid]['photo'] = $result->photo;
+    $faculty[$nid]['link'] = $result->url;
+    $faculty[$nid]['academic_area'] = $result->academic_area;
+
+    if ($result->center) {
+      $faculty[$nid]['center'][] = $result->center;
     }
+  }
 
-    $classes = array();
-    $academic_area_class = drupal_html_class($result->academic_area . '--' . $result->academic_area_tid);
-    $center_class = drupal_html_class($result->center . '--' . $result->center_tid);
-
-    if (!empty($result->academic_area)) {
-      $academic_areas[$academic_area_class] = $result->academic_area;
+  foreach ($faculty as $nid => $data) {
+    $rank_area = $data['rank'];
+    if (!empty($data['academic_area'])) {
+      $rank_area .= ', ' . $data['academic_area'];
     }
-
-    if (!empty($result->center)) {
-      $centers[$center_class] = $result->center;
-    }
-
-    $classes[] = $academic_area_class;
-    $classes[] = $center_class;
 
     $variables = array(
-      'title' => $result->title,
-      'academic_area' => $result->academic_area,
-      'rank' => $result->rank,
+      'title' => $data['title'],
+      'academic_area' => $data['academic_area'],
+      'rank' => $data['rank'],
       'rank_area' => $rank_area,
-      'link' => $result->url,
-      'photo' => $result->photo,
-      'nid' => $result->nid,
+      'link' => $data['link'],
+      'photo' => $data['photo'],
+      'nid' => $nid,
     );
 
     $parameters = array(
       'data' => theme('faculty_isotope_item', $variables),
-      'classes' => $classes,
-      'item-id' => $result->nid,
+      'item-id' => $nid,
     );
+
+    if (!empty($data['academic_area'])) {
+      $parameters['filters']['academic_area'][] = $data['academic_area'];
+    }
+
+    if (!empty($data['center'])) {
+      $parameters['filters']['center'] = $data['center'];
+    }
 
     $items[] = $parameters;
   }
@@ -132,7 +140,7 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
   $academic_area_results = $academic_area_query->execute();
 
   while ($academic_area = $academic_area_results->fetchAssoc()) {
-    $key = drupal_html_class($academic_area['name'] . '--' . $academic_area['tid']);
+    $key = drupal_html_class($academic_area['name']);
     $academic_areas[$key] = $academic_area['name'];
   }
   asort($academic_areas);
@@ -141,12 +149,12 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
   $center_query = db_select('taxonomy_term_data', 'ttd');
   $center_query->fields('ttd', array('tid', 'name'));
   $center_query->leftJoin('taxonomy_vocabulary', 'tv', 'tv.vid = ttd.vid');
-  $center_query->condition('tv.machine_name', 'academic_area');
+  $center_query->condition('tv.machine_name', 'centers_research_programs');
   $center_query->orderBy('ttd.name', 'ASC');
   $center_results = $center_query->execute();
 
   while ($center = $center_results->fetchAssoc()) {
-    $key = drupal_html_class($center['name'] . '--' . $center['tid']);
+    $key = drupal_html_class($center['name']);
     $centers[$key] = $center['name'];
   }
   asort($centers);
@@ -166,7 +174,7 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
         'title' => t('Academic Area'),
         'options' => $academic_areas,
       ),
-      'centers' => array(
+      'center' => array(
         'type' => 'checkboxes',
         'title' => t('Centers'),
         'options' => $centers,
@@ -176,6 +184,7 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
       'callback' => '/faculty-search',
       'lazyLoad' => TRUE,
     ),
+    'id' => 'faculty_list',
   );
 
   $output = isotopify_prepare($items, $options);
