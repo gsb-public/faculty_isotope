@@ -126,7 +126,10 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
 
     if (!empty($data['center'])) {
       $parameters['filters']['center'] = $data['center'];
+      $parameters['sort']['center'] = $data['center'];
     }
+
+
 
     $items[] = $parameters;
   }
@@ -179,6 +182,11 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
         'title' => t('Centers'),
         'options' => $centers,
       ),
+      'sort' => array(
+        'type' => 'sort',
+        'title' => t('Sort'),
+        'options' => $centers,
+      )
     ),
     'settings' => array(
       'callback' => '/faculty-search',
