@@ -17,7 +17,12 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
   $select->condition('n.type', 'faculty');
 
   // Last Name
-  $select->leftJoin('field_data_field_last_name', 'ln', 'n.nid = ln.entity_id AND entity_id = 0');
+  $select->leftJoin('field_data_field_last_name', 'ln', 'n.nid = ln.entity_id AND ln.deleted = 0');
+  $select->addField('ln', 'field_last_name_value', 'last_name');
+
+  // First Name
+  $select->leftJoin('field_data_field_first_name', 'fn', 'n.nid = fn.entity_id AND fn.deleted = 0');
+  $select->addField('fn', 'field_first_name_value', 'first_name');
 
   // Academic Area
   $select->leftJoin('field_data_field_academic_area_single', 'aas', 'n.nid = aas.entity_id AND aas.deleted = 0');
@@ -92,6 +97,8 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
     $faculty[$nid]['rank'] = $result->rank;
     $faculty[$nid]['photo'] = $result->photo;
     $faculty[$nid]['link'] = $result->url;
+    $faculty[$nid]['first_name'] = $result->first_name;
+    $faculty[$nid]['last_name'] = $result->last_name;
     $faculty[$nid]['academic_area'] = $result->academic_area;
 
     if ($result->center) {
@@ -118,6 +125,10 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
     $parameters = array(
       'data' => theme('faculty_isotope_item', $variables),
       'item-id' => $nid,
+      'sort' => array(
+        'firstName' => $data['first_name'],
+        'lastName' => $data['last_name'],
+      ),
     );
 
     if (!empty($data['academic_area'])) {
@@ -126,10 +137,7 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
 
     if (!empty($data['center'])) {
       $parameters['filters']['center'] = $data['center'];
-      $parameters['sort']['center'] = $data['center'];
     }
-
-
 
     $items[] = $parameters;
   }
@@ -185,7 +193,11 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
       'sort' => array(
         'type' => 'sort',
         'title' => t('Sort'),
-        'options' => $centers,
+        'options' => array(
+          'firstName' => t('First Name'),
+          'lastName' => t('Last Name'),
+        ),
+        'default' => 'lastName'
       )
     ),
     'settings' => array(
