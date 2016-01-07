@@ -122,12 +122,25 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
       'nid' => $nid,
     );
 
+    // Convert to timetamps
+    $min = strtotime('10-01-2015');
+    $max = strtotime('10-01-2016');
+
+    // Generate random number using above bounds
+    $val = rand($min, $max);
+
+    // Convert back to desired date format
+    $daterange =  date('Ymd', $val);
+
     $parameters = array(
       'data' => theme('faculty_isotope_item', $variables),
       'item-id' => $nid,
       'sort' => array(
         'firstName' => $data['first_name'],
         'lastName' => $data['last_name'],
+      ),
+      'filters' => array(
+        'daterange' => array($daterange),
       ),
     );
 
@@ -179,6 +192,13 @@ function faculty_isotope_faculty_list_content_type_render($subtype, $conf, $pane
       'submit' => array(
         'type' => 'submit',
         'title' => t('Search'),
+      ),
+      'date_range' => array(
+        'type' => 'date range',
+        'title' => t('Date Range'),
+        'date_from_title' => t('Date From (Format: YYYYMMDD)'),
+        'date_to_title' => t('Date To (Format: YYYYMMDD)'),
+        'default' => '',
       ),
       'academic_area' => array(
         'type' => 'checkboxes',
